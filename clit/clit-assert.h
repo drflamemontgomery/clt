@@ -43,7 +43,7 @@ int __clit_fail();
                 long long: "Failure: Expected %lld Was %lld\n",                \
                 float: "Failure: Expected %.2f Was %.2f\n",                    \
                 double: "Failure: Expected %.2f Was %.2f\n",                   \
-                default: "Failure: Expected %ld Was %ld\n"),                   \
+                default: "Failure: Expected %p Was %p\n"),                     \
             EXPECTED, VALUE);
 
 #endif
