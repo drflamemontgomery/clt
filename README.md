@@ -10,5 +10,5 @@ This project is inspired by [Unity Test](https://github.com/ThrowTheSwitch/Unity
 
 # Dedication
 
-Dedicated to my amazing girlfriend who always pushes me to finish my programming projects. 
+To my amazing girlfriend who always pushes me to finish my programming projects. 
 Someday I will get around to finishing them.
