@@ -5,6 +5,7 @@
 CLIT_INCLUDE_MODULE(addition);
 CLIT_INCLUDE_MODULE(ignore);
 CLIT_INCLUDE_MODULE(assertion);
+CLIT_INCLUDE_MODULE(external);
 
 int main(void) {
   CLIT_ENTRY();
@@ -12,6 +13,7 @@ int main(void) {
   CLIT_RUN_MODULE(addition);
   CLIT_RUN_MODULE(ignore);
   CLIT_RUN_MODULE(assertion);
+  CLIT_RUN_MODULE(external);
 
   return CLIT_END();
 }

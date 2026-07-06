@@ -34,13 +34,16 @@ int __clit_fail();
 
 #define CLIT_ASSERT_EQUAL(EXPECTED, VALUE)                                     \
   if ((EXPECTED) != (VALUE) && CLIT_FAIL())                                    \
-    fprintf(stderr, _Generic((EXPECTED),                                       \
+    fprintf(stderr,                                                            \
+            _Generic((EXPECTED),                                               \
                 char: "Failure: Expected %c Was %c\n",                         \
                 short: "Failure: Expected %d Was %d\n",                        \
                 int: "Failure: Expected %d Was %d\n",                          \
                 long: "Failure: Expected %ld Was %ld\n",                       \
+                long long: "Failure: Expected %lld Was %lld\n",                \
                 float: "Failure: Expected %.2f Was %.2f\n",                    \
                 double: "Failure: Expected %.2f Was %.2f\n",                   \
-                default: "Failure: Expected %ld Was %ld\n"), EXPECTED, VALUE);
+                default: "Failure: Expected %ld Was %ld\n"),                   \
+            EXPECTED, VALUE);
 
 #endif
