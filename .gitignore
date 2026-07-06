@@ -1,0 +1,6 @@
+# C style .gitignore
+
+*.o
+compile_commands.json
+.git
+test_runner
