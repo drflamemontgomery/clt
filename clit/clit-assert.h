@@ -52,4 +52,25 @@ int __clit_fail();
                 default: "Failure: Expected %p Was %p\n"),                     \
             EXPECTED, VALUE);
 
+#define CLIT_ASSERT_NOT_EQUAL(EXPECTED, VALUE)                                 \
+  if ((EXPECTED) == (VALUE) && CLIT_FAIL())                                    \
+    fprintf(stderr,                                                            \
+            _Generic((EXPECTED),                                               \
+                char: "Failure: Expected any value other than %c\n",           \
+                unsigned char: "Failure: Expected any value other than %u\n",  \
+                short: "Failure: Expected any value other than %d\n",          \
+                unsigned short: "Failure: Expected any value other than %u\n", \
+                int: "Failure: Expected any value other than %d\n",            \
+                unsigned int: "Failure: Expected any value other than %u\n",   \
+                long: "Failure: Expected any value other than %ld\n",          \
+                unsigned long: "Failure: Expected any value other than %lu\n", \
+                long long: "Failure: Expected any value other than %lld\n",    \
+                unsigned long long: "Failure: Expected any value other than "  \
+                                    "%llu\n",                                  \
+                float: "Failure: Expected any value other than %g\n",          \
+                double: "Failure: Expected any value other than %lg\n",        \
+                long double: "Failure: Expected any value other than %Lg\n",   \
+                default: "Failure: Expected any value other than %p\n"),       \
+            EXPECTED, VALUE);
+
 #endif
