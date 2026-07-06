@@ -37,12 +37,18 @@ int __clit_fail();
     fprintf(stderr,                                                            \
             _Generic((EXPECTED),                                               \
                 char: "Failure: Expected %c Was %c\n",                         \
+                unsigned char: "Failure: Expected %u Was %u\n",                \
                 short: "Failure: Expected %d Was %d\n",                        \
+                unsigned short: "Failure: Expected %u Was %u\n",               \
                 int: "Failure: Expected %d Was %d\n",                          \
+                unsigned int: "Failure: Expected %u Was %u\n",                 \
                 long: "Failure: Expected %ld Was %ld\n",                       \
+                unsigned long: "Failure: Expected %lu Was %lu\n",              \
                 long long: "Failure: Expected %lld Was %lld\n",                \
-                float: "Failure: Expected %.2f Was %.2f\n",                    \
-                double: "Failure: Expected %.2f Was %.2f\n",                   \
+                unsigned long long: "Failure: Expected %llu Was %llu\n",       \
+                float: "Failure: Expected %g Was %g\n",                        \
+                double: "Failure: Expected %lg Was %lg\n",                     \
+                long double: "Failure: Expected %Lg Was %Lg\n",                \
                 default: "Failure: Expected %p Was %p\n"),                     \
             EXPECTED, VALUE);
 
