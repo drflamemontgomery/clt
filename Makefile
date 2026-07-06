@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall -Werror -Itest -Iclit -DCLIT_TEST_ENABLE=1
+CFLAGS = -g -Wall -Werror -Itest -Iclit -DCLIT_TEST_ENABLE=1 -std=c11
 OBJECTS = \
 	test/main.o\
 	clit/clit.o\

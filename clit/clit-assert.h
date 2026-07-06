@@ -14,6 +14,16 @@ int __clit_fail();
 
 #endif
 
+#define CLIT_EXPECTED_STR(VAR)                                                 \
+  _Generic((VAR),                                                              \
+      char: "%c",                                                              \
+      short: "%d",                                                             \
+      int: "%d",                                                               \
+      long: "%ld",                                                             \
+      float: "%.2f",                                                           \
+      double: "%.2f",                                                          \
+      default: "%ld")
+
 #define CLIT_LOG_FAIL(message, ...)                                            \
   fprintf(stderr, "Failure: " message "\n" __VA_OPT__(, ) __VA_ARGS__)
 #define _CLIT_ASSERT(TRUE, MSG, ...)                                           \
@@ -23,6 +33,14 @@ int __clit_fail();
 #define CLIT_ASSERT(TRUE) _CLIT_ASSERT(TRUE, #TRUE " Was false")
 
 #define CLIT_ASSERT_EQUAL(EXPECTED, VALUE)                                     \
-  _CLIT_ASSERT((EXPECTED) == (VALUE), "Expected %d Was %d", EXPECTED, VALUE)
+  if ((EXPECTED) != (VALUE) && CLIT_FAIL())                                    \
+    fprintf(stderr, _Generic((EXPECTED),                                       \
+                char: "Failure: Expected %c Was %c\n",                         \
+                short: "Failure: Expected %d Was %d\n",                        \
+                int: "Failure: Expected %d Was %d\n",                          \
+                long: "Failure: Expected %ld Was %ld\n",                       \
+                float: "Failure: Expected %.2f Was %.2f\n",                    \
+                double: "Failure: Expected %.2f Was %.2f\n",                   \
+                default: "Failure: Expected %ld Was %ld\n"), EXPECTED, VALUE);
 
 #endif

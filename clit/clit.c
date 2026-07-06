@@ -31,9 +31,11 @@ int __clit_end() {
   printf("\n----------------\n"
          "%ld Tests "
          "%ld Failures "
-         "%ld Ignored\n\n",
+         "%ld Ignored\n",
          clit_test_runner_data.num_of_tests, clit_test_runner_data.failures,
          clit_test_runner_data.ignored);
+
+  printf("%s\n\n", clit_test_runner_data.failures == 0 ? "PASS" : "FAIL");
 
   return clit_test_runner_data.failures != 0;
 }
