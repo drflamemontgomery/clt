@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall -Werror -Itest -Iclit -std=c11
+CFLAGS = -g -Wall -Werror -Itest -Iclt -std=c11
 TEST_OBJECTS = \
 	test/external.o \
 	test/runner.o \
@@ -13,32 +13,32 @@ EXAMPLE_OBJECTS = \
 ifneq ($(filter test,$(MAKECMDGOALS)),)
 endif
 
-default: test_runner
+default: test
 
 .PHONY: example
-example: $(EXAMPLE_OBJECTS) clit/clit.o
-	$(CC) $(CFLAGS) $^ -o clit-example
+example: $(EXAMPLE_OBJECTS) clt/clt.o
+	$(CC) $(CFLAGS) $^ -o clt-example
 
 .PHONY: example-test
-example-test: CFLAGS += -DCLIT_TEST_ENABLE=1
+example-test: CFLAGS += -DCLT_TEST_ENABLE=1
 example-test: example
-	./clit-example
+	./clt-example
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-test_runner: $(TEST_OBJECTS) clit/clit.o
+test_runner: $(TEST_OBJECTS) clt/clt.o
 	$(CC) $(CFLAGS) $^ -o test_runner
 
 .PHONY: test
-test: CFLAGS += -DCLIT_TEST_ENABLE=1
+test: CFLAGS += -DCLT_TEST_ENABLE=1
 test: test_runner
 	./test_runner
 
 .PHONY: clean
 clean:
 	rm -f test_runner
-	rm -f clit/clit.o
+	rm -f cev_matchlt/clt.o
 	rm -f $(TEST_OBJECTS)
 	rm -f $(EXAMPLE_OBJECTS)
 

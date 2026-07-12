@@ -1,20 +1,20 @@
-#ifndef CLIT_ASSERT_H
-#define CLIT_ASSERT_H
+#ifndef CLT_ASSERT_H
+#define CLT_ASSERT_H
 
 #include <stdio.h>
 
-#ifdef CLIT_TEST_ENABLE
+#ifdef CLT_TEST_ENABLE
 
-#define CLIT_FAIL() __clit_fail()
-int __clit_fail();
+#define CLT_FAIL() __clt_fail()
+int __clt_fail();
 
 #else
 
-#define CLIT_FAIL() 1
+#define CLT_FAIL() 1
 
 #endif
 
-#define CLIT_EXPECTED_STR(VAR)                                                 \
+#define CLT_EXPECTED_STR(VAR)                                                 \
   _Generic((VAR),                                                              \
       char: "%c",                                                              \
       short: "%d",                                                             \
@@ -24,16 +24,16 @@ int __clit_fail();
       double: "%.2f",                                                          \
       default: "%ld")
 
-#define CLIT_LOG_FAIL(message, ...)                                            \
+#define CLT_LOG_FAIL(message, ...)                                            \
   fprintf(stderr, "Failure: " message "\n" __VA_OPT__(, ) __VA_ARGS__)
-#define _CLIT_ASSERT(TRUE, MSG, ...)                                           \
-  if (!(TRUE) && CLIT_FAIL())                                                  \
-    CLIT_LOG_FAIL(MSG __VA_OPT__(, ) __VA_ARGS__);
+#define _CLT_ASSERT(TRUE, MSG, ...)                                           \
+  if (!(TRUE) && CLT_FAIL())                                                  \
+    CLT_LOG_FAIL(MSG __VA_OPT__(, ) __VA_ARGS__);
 
-#define CLIT_ASSERT(TRUE) _CLIT_ASSERT(TRUE, #TRUE " Was false")
+#define CLT_ASSERT(TRUE) _CLT_ASSERT(TRUE, #TRUE " Was false")
 
-#define CLIT_ASSERT_EQUAL(EXPECTED, VALUE)                                     \
-  if ((EXPECTED) != (VALUE) && CLIT_FAIL())                                    \
+#define CLT_ASSERT_EQUAL(EXPECTED, VALUE)                                     \
+  if ((EXPECTED) != (VALUE) && CLT_FAIL())                                    \
     fprintf(stderr,                                                            \
             _Generic((EXPECTED),                                               \
                 char: "Failure: Expected %c Was %c\n",                         \
@@ -52,8 +52,8 @@ int __clit_fail();
                 default: "Failure: Expected %p Was %p\n"),                     \
             EXPECTED, VALUE);
 
-#define CLIT_ASSERT_NOT_EQUAL(EXPECTED, VALUE)                                 \
-  if ((EXPECTED) == (VALUE) && CLIT_FAIL())                                    \
+#define CLT_ASSERT_NOT_EQUAL(EXPECTED, VALUE)                                 \
+  if ((EXPECTED) == (VALUE) && CLT_FAIL())                                    \
     fprintf(stderr,                                                            \
             _Generic((EXPECTED),                                               \
                 char: "Failure: Expected any value other than %c\n",           \

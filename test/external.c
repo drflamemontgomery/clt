@@ -1,6 +1,6 @@
-#include "clit-assert.h"
-#include "clit.h"
+#include "clt-assert.h"
+#include "clt.h"
 
-static CLIT_TEST(assert_pass) { CLIT_ASSERT(true); }
+static CLT_TEST(assert_pass) { CLT_ASSERT(true); }
 
-CLIT_MODULE(external, CLIT_REGISTER(assert_pass, "Test external c file test"));
+CLT_MODULE(external, CLT_REGISTER(assert_pass, "Test external c file test"));

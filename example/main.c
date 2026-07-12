@@ -1,8 +1,8 @@
-#include "clit-runner.h"
-#include "clit.h"
+#include "clt-runner.h"
+#include "clt.h"
 #include <stdio.h>
 
-CLIT_INCLUDE_MODULE(algorithm);
+CLT_INCLUDE_MODULE(algorithm);
 
 enum option {
   OPT_UNKNOWN = 0,
@@ -13,10 +13,10 @@ enum option {
 void run_factorial();
 
 int main(void) {
-#if CLIT_TEST_ENABLE
-  CLIT_ENTRY();
-  CLIT_RUN_MODULE(algorithm);
-  return CLIT_END();
+#if CLT_TEST_ENABLE
+  CLT_ENTRY();
+  CLT_RUN_MODULE(algorithm);
+  return CLT_END();
 #else
 
   enum option opt = 0;
