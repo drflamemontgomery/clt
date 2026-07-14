@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall -Werror -Itest -Iclt -std=c11
+CFLAGS = -O2 -g -Wall -Werror -Itest -Iclt -std=c11 -ffunction-sections
 TEST_OBJECTS = \
 	test/external.o \
 	test/runner.o \
@@ -38,18 +38,20 @@ test: test_runner
 
 	@TEMP_FILE="$$(mktemp).o"; \
 	$(CC) $(CFLAGS) -DCLT_DCE_TEST=1 -c test/dce.c -o $$TEMP_FILE; \
-	grep "dce_remove" $$TEMP_FILE 2>&1 1>/dev/null && \
-	echo "Error: expected dce_remove to be removed in production code" && exit -1
+	grep "dce_remove" $$TEMP_FILE && \
+	{ echo "Error: expected dce_remove to be removed in production code"; exit 1; }; \
+	true
 
 	@TEMP_FILE="$$(mktemp).o"; \
 	$(CC) $(CFLAGS) -DCLT_DCE_TEST=0 -c test/dce.c -o $$TEMP_FILE; \
-	grep "dce_remove" $$TEMP_FILE 2>&1 1>/dev/null && \
-	echo "Error: expected dce_remove to be kept in test code" && exit -1
+	grep "dce_remove" $$TEMP_FILE 2>&1 1>/dev/null || \
+	{ echo "Error: expected dce_remove to be kept in test code"; exit 1; }; \
+	true
 
 .PHONY: clean
 clean:
 	rm -f test_runner
-	rm -f cev_matchlt/clt.o
+	rm -f clt/clt.o
 	rm -f $(TEST_OBJECTS)
 	rm -f $(EXAMPLE_OBJECTS)
 

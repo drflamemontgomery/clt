@@ -22,35 +22,35 @@ int main(void) {
  * Addition Tests
  */
 
-CLT_TEST(add) { CLT_ASSERT_EQUAL(2, 1 + 1); }
-CLT_TEST(fail_add) { CLT_ASSERT_EQUAL(5, 2 + 2); }
+static CLT_TEST(add) { CLT_ASSERT_EQUAL(2, 1 + 1); }
+static CLT_TEST(fail_add) { CLT_ASSERT_EQUAL(5, 2 + 2); }
 
 CLT_MODULE(addition, CLT_REGISTER(add, "Test adding of two numbers"),
-            CLT_REGISTER(fail_add, "Test incorrect adding of two numbers",
-                          CLT_SHOULD_FAIL));
+           CLT_REGISTER(fail_add, "Test incorrect adding of two numbers",
+                        CLT_SHOULD_FAIL));
 /*
  * Ignore Tests
  */
 
-CLT_TEST(ignore_pass) { CLT_ASSERT(true); }
-CLT_TEST(ignore_fail) { CLT_ASSERT(false); }
-CLT_TEST(ignore_should_fail) { CLT_ASSERT(false); }
+static CLT_TEST(ignore_pass) { CLT_ASSERT(true); }
+static CLT_TEST(ignore_fail) { CLT_ASSERT(false); }
+static CLT_TEST(ignore_should_fail) { CLT_ASSERT(false); }
 
 CLT_MODULE(ignore,
-            CLT_REGISTER(ignore_pass, "Ignoring test that is expected to pass",
-                          CLT_SHOULD_IGNORE),
-            CLT_REGISTER(ignore_fail,
-                          "Ignoring test that is expected to pass but fails",
-                          CLT_SHOULD_IGNORE),
-            CLT_REGISTER(ignore_should_fail,
-                          "Ignoring test that is expected to fail",
-                          CLT_SHOULD_IGNORE | CLT_SHOULD_FAIL));
+           CLT_REGISTER(ignore_pass, "Ignoring test that is expected to pass",
+                        CLT_SHOULD_IGNORE),
+           CLT_REGISTER(ignore_fail,
+                        "Ignoring test that is expected to pass but fails",
+                        CLT_SHOULD_IGNORE),
+           CLT_REGISTER(ignore_should_fail,
+                        "Ignoring test that is expected to fail",
+                        CLT_SHOULD_IGNORE | CLT_SHOULD_FAIL));
 
 /*
  * Assertion Tests
  */
 
-CLT_TEST(assert_pass) {
+static CLT_TEST(assert_pass) {
   CLT_ASSERT(true);
   CLT_ASSERT_EQUAL(0, 0);
 }
