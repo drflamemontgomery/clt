@@ -4,7 +4,7 @@ CLT is a lightweight unit testing framework built to be used inline with C proje
 Keep all your tests and logic in one file. 
 This project is inspired by [Unity Test](https://github.com/ThrowTheSwitch/Unity).
 
-# Usage
+## Usage
 
 ```c
 #include "clt/clt-runner.h"
@@ -42,7 +42,11 @@ CLT_MODULE(foo,
 $ gcc -DCLT_TEST_ENABLE=1 main.c -o test_runner && ./test_runner
 ```
 
-# Dedication
+## Notes
+
+Since the production code will inevitably contain the test code, I advice you to mark all of your test functions as `static` to allow the compiler to use dead-code elimination for production builds.
+
+## Dedication
 
 To my amazing girlfriend who always pushes me to finish my programming projects. 
 Someday I will get around to finishing them.
