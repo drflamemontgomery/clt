@@ -5,7 +5,16 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#if defined(__GNUC__)
 #define UNUSED __attribute__((unused))
+
+#elif defined(_MSC_VER) && (_MSC_VER > 1911)
+#define UNUSED [[maybe_unused]]
+
+#else
+#define UNUSED
+
+#endif
 
 typedef void (*clt_test_cb)(void);
 typedef struct {
