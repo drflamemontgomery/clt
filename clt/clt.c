@@ -16,10 +16,10 @@ static struct {
   size_t ignored;
 
   clt_test_status_t last_test_status;
-  clt_test_info_t *current_test;
+  const clt_test_info_t *current_test;
 } clt_test_runner_data;
 
-void __clt_setup() {
+void clt_setup() {
   clt_test_runner_data.passed = 0;
   clt_test_runner_data.failures = 0;
   clt_test_runner_data.ignored = 0;
@@ -27,7 +27,7 @@ void __clt_setup() {
   clt_test_runner_data.current_test = NULL;
 }
 
-int __clt_end() {
+int clt_end() {
   printf("\n----------------\n"
          "%ld Tests "
          "%ld Failures "
@@ -40,7 +40,7 @@ int __clt_end() {
   return clt_test_runner_data.failures != 0;
 }
 
-void __clt_run_test(clt_test_info_t *info) {
+void clt_run_test(const clt_test_info_t *info) {
   clt_test_runner_data.num_of_tests++;
   clt_test_runner_data.current_test = info;
 
@@ -77,7 +77,7 @@ void __clt_run_test(clt_test_info_t *info) {
   }
 }
 
-int __clt_fail() {
+int clt_fail() {
   if (clt_test_runner_data.current_test == NULL)
     return 1;
   clt_test_runner_data.last_test_status =

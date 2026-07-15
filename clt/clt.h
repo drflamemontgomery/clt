@@ -7,12 +7,29 @@
 
 #if defined(__GNUC__)
 #define UNUSED __attribute__((unused))
+#define CLT_TEXT_SECTION __attribute((section (".clt_text")))
+#define CLT_MODULE_SECTION __attribute((section (".clt_module_rodata")))
+#define CLT_DATA_SECTION __attribute((section (".clt_data")))
 
 #elif defined(_MSC_VER) && (_MSC_VER > 1911)
+#pragma section(".clt_text", read)
+#pragma section(".clt_data", read)
+#pragma section(".clt_module_rodata", read)
+
 #define UNUSED [[maybe_unused]]
+#define CLT_TEXT_SECTION __declspec((section (".clt_text")))
+#define CLT_MODULE_SECTION __declspec((section (".clt_module_rodata")))
+#define CLT_DATA_SECTION __declspec((section (".clt_data")))
 
 #else
+#pragma section(".clt_text", read)
+#pragma section(".clt_data", read)
+#pragma section(".clt_module_rodata", read)
+
 #define UNUSED
+#define CLT_TEXT_SECTION __declspec((section (".clt_text")))
+#define CLT_MODULE_SECTION __declspec((section (".clt_module_rodata")))
+#define CLT_DATA_SECTION __declspec((section (".clt_data")))
 
 #endif
 
@@ -29,34 +46,23 @@ typedef struct {
 #define CLT_SHOULD_FAIL 1
 #define CLT_SHOULD_IGNORE 2
 
-#if CLT_TEST_ENABLE
-
-#define CLT_HELPER
-#define CLT_TEST(NAME) void __clt_test_##NAME()
+#define CLT_DATA CLT_DATA_SECTION
+#define CLT_HELPER CLT_TEXT_SECTION
+#define CLT_TEST(NAME) CLT_TEXT_SECTION void clt_test_##NAME ()
 
 #define CLT_INCLUDE_MODULE(MODULE)                                            \
-  extern clt_test_info_t __clt_module_##MODULE[];                            \
-  extern size_t __clt_module_##MODULE##_len
+  extern const clt_test_info_t clt_module_##MODULE[] CLT_MODULE_SECTION;                            \
+  extern const size_t clt_module_##MODULE##_len CLT_MODULE_SECTION
 
 #define CLT_MODULE(MODULE, ...)                                               \
-  clt_test_info_t __clt_module_##MODULE[] = {__VA_ARGS__};                   \
-  size_t __clt_module_##MODULE##_len =                                        \
-      sizeof(__clt_module_##MODULE) / sizeof(*__clt_module_##MODULE)
+  const clt_test_info_t clt_module_##MODULE[] CLT_MODULE_SECTION = {__VA_ARGS__};                   \
+  const size_t clt_module_##MODULE##_len CLT_MODULE_SECTION =                                        \
+      sizeof(clt_module_##MODULE) / sizeof(*clt_module_##MODULE)
 
 #define CLT_REGISTER(NAME, DESCRIPTION, ...)                                  \
   (clt_test_info_t) {                                                         \
-    .cb = __clt_test_##NAME, .name = #NAME, .description = DESCRIPTION,       \
+    .cb = clt_test_##NAME, .name = #NAME, .description = DESCRIPTION,       \
     .file = __FILE__, .flags = 0 __VA_OPT__(|) __VA_ARGS__,                    \
   }
-
-#else
-
-#define CLT_HELPER UNUSED
-#define CLT_TEST(NAME) UNUSED void __clt_test_##NAME()
-#define CLT_INCLUDE_MODULE(MODULE)
-#define CLT_MODULE(MODULE, ...)
-#define CLT_REGISTER(NAME, DESCRIPTION, ...)
-
-#endif
 
 #endif

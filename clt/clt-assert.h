@@ -5,8 +5,8 @@
 
 #ifdef CLT_TEST_ENABLE
 
-#define CLT_FAIL() __clt_fail()
-int __clt_fail();
+#define CLT_FAIL() clt_fail()
+int clt_fail();
 
 #else
 
