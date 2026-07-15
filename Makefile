@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -O2 -g -Wall -Werror -Itest -Iclt -std=c11 -ffunction-sections
+CFLAGS = -O2 -g -Wall -Werror -Itest -Iclt -std=c11 -ffunction-sections -fdata-sections
+LDFLAGS = -Wl,--gc-sections
 TEST_OBJECTS = \
 	test/external.o \
 	test/runner.o \
@@ -17,7 +18,7 @@ default: test
 
 .PHONY: example
 example: $(EXAMPLE_OBJECTS) clt/clt.o
-	$(CC) $(CFLAGS) $^ -o clt-example
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o clt-example
 
 .PHONY: example-test
 example-test: CFLAGS += -DCLT_TEST_ENABLE=1
@@ -28,25 +29,25 @@ example-test: example
 	$(CC) $(CFLAGS) -c $< -o $@
 
 test_runner: $(TEST_OBJECTS) clt/clt.o
-	$(CC) $(CFLAGS) $^ -o test_runner
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o test_runner
 
 .PHONY: test
 test: CFLAGS += -DCLT_TEST_ENABLE=1
 test: TEMPOBJFILE = $(shell mktemp).o
-test: test_runner
+test: test_runner clt-example
 	@./test_runner
+	
+	@readelf -S clt-example | grep clt_text && \
+		{ echo "Error: .clt_text not stripped from clt-example"; exit 1; }; \
+		echo "GC .clt_text: PASS"
 
-	@TEMP_FILE="$$(mktemp).o"; \
-	$(CC) $(CFLAGS) -DCLT_DCE_TEST=1 -c test/dce.c -o $$TEMP_FILE; \
-	grep "dce_remove" $$TEMP_FILE && \
-	{ echo "Error: expected dce_remove to be removed in production code"; exit 1; }; \
-	true
+	@readelf -S clt-example | grep clt_module_rodata && \
+		{ echo "Error: .clt_module_rodata not stripped from clt-example"; exit 1; };\
+		echo "GC .clt_module_rodata: PASS"
 
-	@TEMP_FILE="$$(mktemp).o"; \
-	$(CC) $(CFLAGS) -DCLT_DCE_TEST=0 -c test/dce.c -o $$TEMP_FILE; \
-	grep "dce_remove" $$TEMP_FILE 2>&1 1>/dev/null || \
-	{ echo "Error: expected dce_remove to be kept in test code"; exit 1; }; \
-	true
+	@readelf -S clt-example | grep clt_data && \
+		{ echo "Error: .clt_data not stripped from clt-example"; exit 1; };\
+		echo "GC .clt_data: PASS"
 
 .PHONY: clean
 clean:
