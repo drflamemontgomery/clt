@@ -17,22 +17,24 @@ endif
 default: test
 
 .PHONY: example
-example: $(EXAMPLE_OBJECTS) clt/clt.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o clt-example
+example: clt-example
 
 .PHONY: example-test
 example-test: CFLAGS += -DCLT_TEST_ENABLE=1
-example-test: example
+example-test: clt-example
 	./clt-example
+
+clt-example: $(EXAMPLE_OBJECTS) clt/clt.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o clt-example
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+test_runner: CFLAGS += -DCLT_TEST_ENABLE=1
 test_runner: $(TEST_OBJECTS) clt/clt.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o test_runner
 
 .PHONY: test
-test: CFLAGS += -DCLT_TEST_ENABLE=1
 test: TEMPOBJFILE = $(shell mktemp).o
 test: test_runner clt-example
 	@./test_runner
@@ -51,6 +53,7 @@ test: test_runner clt-example
 
 .PHONY: clean
 clean:
+	rm -f clt-example
 	rm -f test_runner
 	rm -f clt/clt.o
 	rm -f $(TEST_OBJECTS)
