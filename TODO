@@ -7,8 +7,3 @@
     ease
 
 - Add better documentation
-
-- Replace relevant macros with inline functions
-    Many macros increases the likelihood of having unintentional functionality such as supplying i++
-    as an argument which could be used multiple times. Use inline functions to reduce these cases
-    wherever possible.
