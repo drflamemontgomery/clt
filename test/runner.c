@@ -32,9 +32,9 @@ CLT_MODULE(addition, CLT_REGISTER(add, "Test adding of two numbers"),
  * Ignore Tests
  */
 
-static CLT_TEST(ignore_pass) { CLT_ASSERT(true); }
-static CLT_TEST(ignore_fail) { CLT_ASSERT(false); }
-static CLT_TEST(ignore_should_fail) { CLT_ASSERT(false); }
+static CLT_TEST(ignore_pass) { clt_assert(true); }
+static CLT_TEST(ignore_fail) { clt_assert(false); }
+static CLT_TEST(ignore_should_fail) { clt_assert(false); }
 
 CLT_MODULE(ignore,
            CLT_REGISTER(ignore_pass, "Ignoring test that is expected to pass",
@@ -51,7 +51,7 @@ CLT_MODULE(ignore,
  */
 
 static CLT_TEST(assert_pass) {
-  CLT_ASSERT(true);
+  clt_assert(true);
   clt_assert_equal(0, 0);
 }
 

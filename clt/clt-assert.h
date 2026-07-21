@@ -6,20 +6,19 @@
 #include "clt-internal.h"
 
 CLT_TEXT_SECTION int clt_fail();
-#define CLT_FAIL() clt_fail()
 
 #define CLT_LOG_FAIL(message, ...)                                             \
   fprintf(stderr, "Failure: " message "\n" __VA_OPT__(, ) __VA_ARGS__)
 #define _CLT_ASSERT(TRUE, MSG, ...)                                            \
-  if (!(TRUE) && CLT_FAIL())                                                   \
+  if (!(TRUE) && clt_fail())                                                   \
     CLT_LOG_FAIL(MSG __VA_OPT__(, ) __VA_ARGS__);
 
-#define CLT_ASSERT(TRUE) _CLT_ASSERT(TRUE, #TRUE " Was false")
+#define clt_assert(TRUE) _CLT_ASSERT(TRUE, #TRUE " Was false")
 
 #define DEF_CLT_ASSERT_EQUAL(TYPE, NAME, SPECIFIER)                            \
   inline CLT_TEXT_SECTION void clt_assert_equal_##NAME(TYPE expected,          \
                                                        TYPE value) {           \
-    if (expected != value && CLT_FAIL())                                       \
+    if (expected != value && clt_fail())                                       \
       fprintf(stderr, "Failure: Expected " SPECIFIER " Was " SPECIFIER "\n",   \
               expected, value);                                                \
   }
@@ -63,7 +62,7 @@ DEF_CLT_ASSERT_EQUAL(void *, pointer, "%p")
 
 #define DEF_CLT_ASSERT_NOT_EQUAL(TYPE, NAME, SPECIFIER)                        \
   inline void clt_assert_not_equal_##NAME(TYPE expected, TYPE value) {         \
-    if (expected == value && CLT_FAIL())                                       \
+    if (expected == value && clt_fail())                                       \
       fprintf(stderr,                                                          \
               "Failure: Expected any value other than " SPECIFIER "\n",        \
               expected);                                                       \
