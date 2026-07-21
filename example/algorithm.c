@@ -8,12 +8,12 @@ long long factorial(long long num) {
 }
 
 CLT_TEST(factorial) {
-  CLT_ASSERT_EQUAL(1LL, factorial(-1));
-  CLT_ASSERT_EQUAL(1LL, factorial(0));
-  CLT_ASSERT_EQUAL(1LL, factorial(1));
-  CLT_ASSERT_EQUAL(2LL, factorial(2));
-  CLT_ASSERT_EQUAL(6LL, factorial(3));
-  CLT_ASSERT_EQUAL(720LL, factorial(6));
+  clt_assert_equal(1LL, factorial(-1));
+  clt_assert_equal(1LL, factorial(0));
+  clt_assert_equal(1LL, factorial(1));
+  clt_assert_equal(2LL, factorial(2));
+  clt_assert_equal(6LL, factorial(3));
+  clt_assert_equal(720LL, factorial(6));
 }
 
 CLT_MODULE(algorithm,

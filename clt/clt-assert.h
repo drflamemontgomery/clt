@@ -5,18 +5,8 @@
 
 #include "clt-internal.h"
 
-int clt_fail();
+CLT_TEXT_SECTION int clt_fail();
 #define CLT_FAIL() clt_fail()
-
-#define CLT_EXPECTED_STR(VAR)                                                  \
-  _Generic((VAR),                                                              \
-      char: "%c",                                                              \
-      short: "%d",                                                             \
-      int: "%d",                                                               \
-      long: "%ld",                                                             \
-      float: "%.2f",                                                           \
-      double: "%.2f",                                                          \
-      default: "%ld")
 
 #define CLT_LOG_FAIL(message, ...)                                             \
   fprintf(stderr, "Failure: " message "\n" __VA_OPT__(, ) __VA_ARGS__)
@@ -27,7 +17,8 @@ int clt_fail();
 #define CLT_ASSERT(TRUE) _CLT_ASSERT(TRUE, #TRUE " Was false")
 
 #define DEF_CLT_ASSERT_EQUAL(TYPE, NAME, SPECIFIER)                            \
-  inline CLT_TEXT_SECTION void clt_assert_equal_##NAME(TYPE expected, TYPE value) {             \
+  inline CLT_TEXT_SECTION void clt_assert_equal_##NAME(TYPE expected,          \
+                                                       TYPE value) {           \
     if (expected != value && CLT_FAIL())                                       \
       fprintf(stderr, "Failure: Expected " SPECIFIER " Was " SPECIFIER "\n",   \
               expected, value);                                                \
@@ -51,7 +42,9 @@ DEF_CLT_ASSERT_EQUAL(long double, ldouble, "%Lg")
 
 DEF_CLT_ASSERT_EQUAL(void *, pointer, "%p")
 
-#define CLT_ASSERT_EQUAL(EXPECTED, VALUE)                                      \
+#undef DEF_CLT_ASSERT_EQUAL
+
+#define clt_assert_equal(EXPECTED, VALUE)                                      \
   _Generic((EXPECTED),                                                         \
       char: clt_assert_equal_char,                                             \
       unsigned char: clt_assert_equal_uchar,                                   \
@@ -94,7 +87,9 @@ DEF_CLT_ASSERT_NOT_EQUAL(long double, ldouble, "%Lg")
 
 DEF_CLT_ASSERT_NOT_EQUAL(void *, pointer, "%p")
 
-#define CLT_ASSERT_NOT_EQUAL(EXPECTED, VALUE)                                  \
+#undef DEF_CLT_ASSERT_NOT_EQUAL
+
+#define clt_assert_not_equal(EXPECTED, VALUE)                                  \
   _Generic((EXPECTED),                                                         \
       char: clt_assert_not_equal_char,                                         \
       unsigned char: clt_assert_not_equal_uchar,                               \
