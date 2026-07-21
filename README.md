@@ -42,10 +42,18 @@ CLT_MODULE(foo,
 ```
 
 ```bash
-$ gcc main.c clt/clt.c -o test_runner
+$ gcc main.c clt/clt.c file-with-foofoo-test.c -o test_runner
 $ ./test_runner
 
 ====== foo ======
+test.c:foobar: PASS
+test.c:barfoo: PASS
+test.c:foofoo: IGNORE
+
+----------------
+3 Tests 0 Failures 1 Ignored
+PASS
+
 ```
 ## Compatibility
 
