@@ -14,9 +14,9 @@ void run_factorial();
 
 int main(void) {
 #if CLT_TEST_ENABLE
-  CLT_ENTRY();
-  CLT_RUN_MODULE(algorithm);
-  return CLT_END();
+  clt_begin();
+  clt_run_module(algorithm);
+  return clt_end();
 #else
 
   enum option opt = 0;
