@@ -3,9 +3,9 @@
 
 #if defined(__GNUC__)
 #define UNUSED __attribute__((unused))
-#define CLT_TEXT_SECTION __attribute((section (".clt_text")))
-#define CLT_MODULE_SECTION __attribute((section (".clt_module_rodata")))
-#define CLT_DATA_SECTION __attribute((section (".clt_data")))
+#define CLT_TEXT_SECTION __attribute__((section (".clt_text")))
+#define CLT_MODULE_SECTION __attribute__((section (".clt_module_rodata")))
+#define CLT_DATA_SECTION __attribute__((section (".clt_data")))
 
 #elif defined(_MSC_VER) && (_MSC_VER > 1911)
 #pragma section(".clt_text", read)

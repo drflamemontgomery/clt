@@ -1,4 +1,5 @@
 #include "clt.h"
+#include "clt-assert.h"
 #include "clt-runner.h"
 
 #include <stdio.h>
@@ -17,9 +18,9 @@ static struct {
 
   clt_test_status_t last_test_status;
   const clt_test_info_t *current_test;
-} clt_test_runner_data;
+} clt_test_runner_data CLT_DATA_SECTION;
 
-void clt_setup() {
+CLT_TEXT_SECTION void clt_setup() {
   clt_test_runner_data.passed = 0;
   clt_test_runner_data.failures = 0;
   clt_test_runner_data.ignored = 0;
@@ -27,7 +28,7 @@ void clt_setup() {
   clt_test_runner_data.current_test = NULL;
 }
 
-int clt_end() {
+CLT_TEXT_SECTION int clt_end() {
   printf("\n----------------\n"
          "%ld Tests "
          "%ld Failures "
@@ -40,7 +41,7 @@ int clt_end() {
   return clt_test_runner_data.failures != 0;
 }
 
-void clt_run_test(const clt_test_info_t *info) {
+CLT_TEXT_SECTION void clt_run_test(const clt_test_info_t *info) {
   clt_test_runner_data.num_of_tests++;
   clt_test_runner_data.current_test = info;
 
@@ -77,12 +78,11 @@ void clt_run_test(const clt_test_info_t *info) {
   }
 }
 
-int clt_fail() {
+CLT_TEXT_SECTION int clt_fail() {
   if (clt_test_runner_data.current_test == NULL)
     return 1;
   clt_test_runner_data.last_test_status =
-      clt_test_runner_data.current_test->flags & CLT_SHOULD_FAIL ? PASS
-                                                                   : FAIL;
+      clt_test_runner_data.current_test->flags & CLT_SHOULD_FAIL ? PASS : FAIL;
 
   return clt_test_runner_data.current_test->flags & CLT_SHOULD_FAIL ? 0 : 1;
 }
