@@ -10,6 +10,7 @@ This project is inspired by [Unity Test](https://github.com/ThrowTheSwitch/Unity
 
 ```c
 #include "clt/clt-runner.h"
+#include "clt/clt-assert.h"
 #include "clt/clt.h"
 
 // Include the test module foo
@@ -17,18 +18,18 @@ CLT_INCLUDE_MODULE(foo);
 
 int main(void) {
     // Initialize CLT
-    CLT_ENTRY();
+    clt_begin();
 
     // Run all tests inside foo
-    CLT_RUN_MODULE(foo);
+    clt_run_module(foo);
 
     // Test information and CLT cleanup
-    return CLT_END();
+    return clt_end();
 }
 
 // Define a test using any function modifiers
-CLT_TEST(foobar) { CLT_ASSERT(true); }
-static CLT_TEST(barfoo) { CLT_ASSERT(false); }
+CLT_TEST(foobar) { clt_assert(true); }
+static CLT_TEST(barfoo) { clt_assert(false); }
 extern CLT_TEST(foofoo);
 
 // Define a Test Module
@@ -36,13 +37,15 @@ CLT_MODULE(foo,
     // Register tests with name, description, fail/ignore flags
     CLT_REGISTER(foobar, "A test description"),
     CLT_REGISTER(barfoo, "A test description", CLT_SHOULD_FAIL),
-    CLT_REGISTER(foofoo, "A test description", CLT_SHOULD_IGNORE),
+    CLT_REGISTER(foofoo, "A test description", CLT_SHOULD_IGNORE)
 );
 ```
 
 ```bash
-$ gcc main.c -o test_runner
+$ gcc main.c clt/clt.c -o test_runner
 $ ./test_runner
+
+====== foo ======
 ```
 ## Compatibility
 
