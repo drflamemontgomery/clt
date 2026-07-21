@@ -8,14 +8,14 @@ CLT_INCLUDE_MODULE(assertion);
 CLT_INCLUDE_MODULE(external);
 
 int main(void) {
-  CLT_ENTRY();
+  clt_begin();
 
-  CLT_RUN_MODULE(addition);
-  CLT_RUN_MODULE(ignore);
-  CLT_RUN_MODULE(assertion);
-  CLT_RUN_MODULE(external);
+  clt_run_module(addition);
+  clt_run_module(ignore);
+  clt_run_module(assertion);
+  clt_run_module(external);
 
-  return CLT_END();
+  return clt_end();
 }
 
 /*

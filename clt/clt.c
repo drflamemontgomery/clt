@@ -2,6 +2,7 @@
 #include "clt-assert.h"
 #include "clt-runner.h"
 
+#include <memory.h>
 #include <stdio.h>
 
 typedef enum {
@@ -26,7 +27,7 @@ static struct {
 /*
  * Initialize Global state to begin running tests
  */
-CLT_TEXT_SECTION void clt_setup() {
+CLT_TEXT_SECTION void clt_begin() {
   clt_test_runner_data.passed = 0;
   clt_test_runner_data.failures = 0;
   clt_test_runner_data.ignored = 0;
@@ -89,6 +90,27 @@ CLT_TEXT_SECTION void clt_run_test(const clt_test_info_t *info) {
            info->name, status);
   } else {
     printf("%s:%s: %s\n", info->file, info->name, status);
+  }
+}
+
+CLT_TEXT_SECTION bool clt_is_null_test(const clt_test_info_t *test) {
+  if (test == NULL)
+    return true;
+  const clt_test_info_t null_test = CLT_NULL_TEST_INFO;
+  return memcmp(&null_test, test, sizeof(null_test)) == 0;
+}
+
+/*
+ * Run All tests within a given module
+ */
+CLT_TEXT_SECTION void clt_internal_run_module(const clt_module_info_t *info) {
+  if (info == NULL)
+    return; // TODO proper handling and message
+
+  printf("\n====== %s ======\n", info->name);
+  for (const clt_test_info_t *test = info->tests;
+       test != NULL && !clt_is_null_test(test); test++) {
+    clt_run_test(test);
   }
 }
 
