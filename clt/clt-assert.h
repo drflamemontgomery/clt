@@ -17,11 +17,15 @@ CLT_TEXT_SECTION void clt_push_error_msg(char *msg);
   } while (0)
 
 #define CLT_LOG_FAIL(message, ...)                                             \
-  CLT_PUSH_ERROR_MSG("Failure: " message __VA_OPT__(, ) __VA_ARGS__)
+  CLT_PUSH_ERROR_MSG(ANSI_BOLD ANSI_RED_FG                                     \
+                     "Error: " ANSI_CLEAR_COLOR message __VA_OPT__(, )         \
+                         __VA_ARGS__)
 
 #define _CLT_ASSERT(TRUE, MSG, ...)                                            \
-  if (!(TRUE) && clt_fail())                                                   \
-    CLT_LOG_FAIL(MSG __VA_OPT__(, ) __VA_ARGS__);
+  do {                                                                         \
+    if (!(TRUE) && clt_fail())                                                 \
+      CLT_LOG_FAIL(MSG __VA_OPT__(, ) __VA_ARGS__);                            \
+  } while (0);
 
 #define clt_assert(TRUE) _CLT_ASSERT(TRUE, #TRUE " Was false")
 
@@ -29,8 +33,10 @@ CLT_TEXT_SECTION void clt_push_error_msg(char *msg);
   inline CLT_TEXT_SECTION void clt_assert_equal_##NAME(TYPE expected,          \
                                                        TYPE value) {           \
     if (expected != value && clt_fail())                                       \
-      CLT_PUSH_ERROR_MSG(                                                      \
-          "Failure: Expected " SPECIFIER " Was " SPECIFIER, expected, value);   \
+      CLT_PUSH_ERROR_MSG(ANSI_BOLD ANSI_RED_FG "Error: " ANSI_CLEAR_COLOR      \
+                                               "Expected " SPECIFIER           \
+                                               " Was " SPECIFIER,              \
+                         expected, value);                                     \
   }
 
 DEF_CLT_ASSERT_EQUAL(char, char, "%c")
@@ -73,7 +79,9 @@ DEF_CLT_ASSERT_EQUAL(void *, pointer, "%p")
 #define DEF_CLT_ASSERT_NOT_EQUAL(TYPE, NAME, SPECIFIER)                        \
   inline void clt_assert_not_equal_##NAME(TYPE expected, TYPE value) {         \
     if (expected == value && clt_fail())                                       \
-      CLT_PUSH_ERROR_MSG("Failure: Expected any value other than " SPECIFIER,  \
+      CLT_PUSH_ERROR_MSG(ANSI_BOLD ANSI_RED_FG                                 \
+                         "Error:" ANSI_CLEAR_COLOR                             \
+                         " Expected any value other than " SPECIFIER,          \
                          expected);                                            \
   }
 

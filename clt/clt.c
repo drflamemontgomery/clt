@@ -4,12 +4,21 @@
 
 #include <memory.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef enum {
   PASS,
   FAIL,
   IGNORE,
 } clt_test_status_t;
+
+/*
+ * Linked List for clt test error messages
+ */
+typedef struct clt_test_error_msg_s {
+  struct clt_test_error_msg_s *next;
+  char *msg;
+} clt_test_error_msg_t;
 
 /*
  * Global state for test runner
@@ -25,6 +34,46 @@ static struct {
 } clt_test_runner_data CLT_DATA_SECTION;
 
 /*
+ * Global Linked List for clt test errors
+ */
+static struct clt_test_error_s {
+  struct clt_test_error_s *next;
+  const clt_test_info_t *test_info;
+
+  clt_test_error_msg_t *messages;
+} *clt_test_runner_errors CLT_DATA_SECTION = NULL;
+static struct clt_test_error_s *clt_test_errors_tail CLT_DATA_SECTION = NULL;
+
+CLT_TEXT_SECTION void clt_free_error_msg_list(clt_test_error_msg_t *list) {
+  clt_test_error_msg_t *next = NULL;
+  while (list != NULL) {
+    next = list->next;
+
+    free(list->msg);
+    list->next = NULL;
+    list->msg = NULL;
+
+    free(list);
+
+    list = next;
+  }
+}
+
+CLT_TEXT_SECTION void clt_free_error_list(struct clt_test_error_s *list) {
+  struct clt_test_error_s *next = NULL;
+  while (list != NULL) {
+    next = list->next;
+
+    list->next = NULL;
+    list->test_info = NULL;
+    clt_free_error_msg_list(list->messages);
+    free(list);
+
+    list = next;
+  }
+}
+
+/*
  * Initialize Global state to begin running tests
  */
 CLT_TEXT_SECTION void clt_begin() {
@@ -33,6 +82,10 @@ CLT_TEXT_SECTION void clt_begin() {
   clt_test_runner_data.ignored = 0;
   clt_test_runner_data.last_test_status = PASS;
   clt_test_runner_data.current_test = NULL;
+
+  clt_free_error_list(clt_test_runner_errors);
+  clt_test_runner_errors = NULL;
+  clt_test_errors_tail = NULL;
 }
 
 /*
@@ -41,6 +94,32 @@ CLT_TEXT_SECTION void clt_begin() {
  * @return 0 if success, 1 if fail
  */
 CLT_TEXT_SECTION int clt_end() {
+  struct clt_test_error_s *head = clt_test_runner_errors;
+  if (head != NULL) {
+    printf("\n====== " ANSI_BOLD "ERROR LOG" ANSI_CLEAR_COLOR " ======\n");
+  }
+
+  while (head != NULL) {
+    printf("\n====== %s ======\n", head->test_info->name);
+    printf(ANSI_BOLD "File:" ANSI_CLEAR_COLOR " %s\n", head->test_info->file);
+    printf(ANSI_BOLD "Description:" ANSI_CLEAR_COLOR " %s\n",
+           head->test_info->description);
+    printf(ANSI_BOLD "Should Fail:" ANSI_CLEAR_COLOR " %s\n",
+           (head->test_info->flags & CLT_SHOULD_FAIL) == 0 ? "false" : "true");
+    printf(ANSI_BOLD "Should Ignore:" ANSI_CLEAR_COLOR " %s\n",
+           (head->test_info->flags & CLT_SHOULD_IGNORE) == 0 ? "false"
+                                                             : "true");
+    putchar('\n');
+
+    clt_test_error_msg_t *msg = head->messages;
+    while (msg != NULL) {
+      printf("%s\n", msg->msg);
+      msg = msg->next;
+    }
+
+    head = head->next;
+  }
+
   printf("\n----------------\n"
          "%ld Tests "
          "%ld Failures "
@@ -49,6 +128,10 @@ CLT_TEXT_SECTION int clt_end() {
          clt_test_runner_data.ignored);
 
   printf("%s\n\n", clt_test_runner_data.failures == 0 ? "PASS" : "FAIL");
+
+  clt_free_error_list(clt_test_runner_errors);
+  clt_test_runner_errors = NULL;
+  clt_test_errors_tail = NULL;
 
   return clt_test_runner_data.failures != 0;
 }
@@ -71,25 +154,27 @@ CLT_TEXT_SECTION void clt_run_test(const clt_test_info_t *info) {
   const char *status = NULL;
   switch (clt_test_runner_data.last_test_status) {
   case FAIL:
-    status = "FAIL";
+    status = ANSI_RED_FG "FAIL" ANSI_CLEAR_COLOR;
     clt_test_runner_data.failures++;
     break;
   case IGNORE:
-    status = "IGNORE";
+    status = ANSI_YELLOW_FG "IGNORE" ANSI_CLEAR_COLOR;
     clt_test_runner_data.ignored++;
     break;
   case PASS:
-    status = "PASS";
+    status = ANSI_GREEN_FG "PASS" ANSI_CLEAR_COLOR;
     clt_test_runner_data.passed++;
     break;
   }
 
   if (info->flags & CLT_SHOULD_FAIL &&
       clt_test_runner_data.last_test_status == FAIL) {
-    printf("%s:%s: %s (Expected Failure but Instead Passed)\n", info->file,
-           info->name, status);
+    printf(ANSI_BOLD "%s:%s:" ANSI_CLEAR_COLOR
+                     " %s " ANSI_BOLD "(Expected Failure but Instead Passed)\n" ANSI_CLEAR_COLOR,
+           info->file, info->name, status);
   } else {
-    printf("%s:%s: %s\n", info->file, info->name, status);
+    printf(ANSI_BOLD "%s:%s:" ANSI_CLEAR_COLOR " %s\n", info->file, info->name,
+           status);
   }
 }
 
@@ -124,4 +209,32 @@ CLT_TEXT_SECTION int clt_fail() {
       clt_test_runner_data.current_test->flags & CLT_SHOULD_FAIL ? PASS : FAIL;
 
   return clt_test_runner_data.current_test->flags & CLT_SHOULD_FAIL ? 0 : 1;
+}
+
+CLT_TEXT_SECTION void clt_push_error_msg(char *msg) {
+  if (clt_test_errors_tail == NULL ||
+      clt_test_errors_tail->test_info != clt_test_runner_data.current_test) {
+    struct clt_test_error_s *prev = clt_test_errors_tail;
+
+    clt_test_errors_tail = calloc(1, sizeof(*clt_test_errors_tail));
+    clt_test_errors_tail->test_info = clt_test_runner_data.current_test;
+
+    if (prev != NULL)
+      prev->next = clt_test_errors_tail;
+  }
+
+  if (clt_test_runner_errors == NULL)
+    clt_test_runner_errors = clt_test_errors_tail;
+
+  clt_test_error_msg_t *tail = clt_test_errors_tail->messages,
+                       *message = calloc(1, sizeof(*message));
+  message->msg = msg;
+  while (tail != NULL && tail->next != NULL) {
+    tail = tail->next;
+  }
+
+  if (tail != NULL)
+    tail->next = message;
+  else
+    clt_test_errors_tail->messages = message;
 }
