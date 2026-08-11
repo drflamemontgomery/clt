@@ -2,13 +2,23 @@
 #define CLT_ASSERT_H
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "clt-internal.h"
 
 CLT_TEXT_SECTION int clt_fail();
+CLT_TEXT_SECTION void clt_push_error_msg(char *msg);
+
+#define CLT_PUSH_ERROR_MSG(message, ...)                                       \
+  do {                                                                         \
+    char *buf = calloc(256, sizeof(char));                                     \
+    snprintf(buf, 256, message __VA_OPT__(, ) __VA_ARGS__);                    \
+    clt_push_error_msg(buf);                                                   \
+  } while (0)
 
 #define CLT_LOG_FAIL(message, ...)                                             \
-  fprintf(stderr, "Failure: " message "\n" __VA_OPT__(, ) __VA_ARGS__)
+  CLT_PUSH_ERROR_MSG("Failure: " message __VA_OPT__(, ) __VA_ARGS__)
+
 #define _CLT_ASSERT(TRUE, MSG, ...)                                            \
   if (!(TRUE) && clt_fail())                                                   \
     CLT_LOG_FAIL(MSG __VA_OPT__(, ) __VA_ARGS__);
@@ -19,8 +29,8 @@ CLT_TEXT_SECTION int clt_fail();
   inline CLT_TEXT_SECTION void clt_assert_equal_##NAME(TYPE expected,          \
                                                        TYPE value) {           \
     if (expected != value && clt_fail())                                       \
-      fprintf(stderr, "Failure: Expected " SPECIFIER " Was " SPECIFIER "\n",   \
-              expected, value);                                                \
+      CLT_PUSH_ERROR_MSG(                                                      \
+          "Failure: Expected " SPECIFIER " Was " SPECIFIER, expected, value);   \
   }
 
 DEF_CLT_ASSERT_EQUAL(char, char, "%c")
@@ -63,9 +73,8 @@ DEF_CLT_ASSERT_EQUAL(void *, pointer, "%p")
 #define DEF_CLT_ASSERT_NOT_EQUAL(TYPE, NAME, SPECIFIER)                        \
   inline void clt_assert_not_equal_##NAME(TYPE expected, TYPE value) {         \
     if (expected == value && clt_fail())                                       \
-      fprintf(stderr,                                                          \
-              "Failure: Expected any value other than " SPECIFIER "\n",        \
-              expected);                                                       \
+      CLT_PUSH_ERROR_MSG("Failure: Expected any value other than " SPECIFIER,  \
+                         expected);                                            \
   }
 
 DEF_CLT_ASSERT_NOT_EQUAL(char, char, "%c")
