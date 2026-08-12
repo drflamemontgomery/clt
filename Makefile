@@ -44,8 +44,7 @@ test_fail_runner: $(TEST_FAIL_OBJECTS) clt/clt.o
 test: TEMPOBJFILE = $(shell mktemp).o
 test: test_runner test_fail_runner clt-example
 	@./test_runner
-
-	@! ./test_fail_runner
+	@./test_fail_runner
 	
 	@readelf -S clt-example | grep clt_text && \
 		{ echo "Error: .clt_text not stripped from clt-example"; exit 1; }; \

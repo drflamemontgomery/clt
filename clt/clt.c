@@ -31,6 +31,7 @@ static struct {
 
   clt_test_status_t last_test_status;
   const clt_test_info_t *current_test;
+  const clt_module_info_t *current_module;
 } clt_test_runner_data CLT_DATA_SECTION;
 
 /*
@@ -39,6 +40,7 @@ static struct {
 static struct clt_test_error_s {
   struct clt_test_error_s *next;
   const clt_test_info_t *test_info;
+  const clt_module_info_t *module_info;
 
   clt_test_error_msg_t *messages;
 } *clt_test_runner_errors CLT_DATA_SECTION = NULL;
@@ -82,6 +84,7 @@ CLT_TEXT_SECTION void clt_begin() {
   clt_test_runner_data.ignored = 0;
   clt_test_runner_data.last_test_status = PASS;
   clt_test_runner_data.current_test = NULL;
+  clt_test_runner_data.current_module = NULL;
 
   clt_free_error_list(clt_test_runner_errors);
   clt_test_runner_errors = NULL;
@@ -95,12 +98,11 @@ CLT_TEXT_SECTION void clt_begin() {
  */
 CLT_TEXT_SECTION int clt_end() {
   struct clt_test_error_s *head = clt_test_runner_errors;
-  if (head != NULL) {
-    printf("\n====== " ANSI_BOLD "ERROR LOG" ANSI_CLEAR_COLOR " ======\n");
-  }
 
   while (head != NULL) {
-    printf("\n====== %s ======\n", head->test_info->name);
+    printf("\nfailures:\n\n");
+    printf("---- %s::%s ----\n", head->module_info->name,
+           head->test_info->name);
     printf(ANSI_BOLD "File:" ANSI_CLEAR_COLOR " %s\n", head->test_info->file);
     printf(ANSI_BOLD "Description:" ANSI_CLEAR_COLOR " %s\n",
            head->test_info->description);
@@ -154,28 +156,26 @@ CLT_TEXT_SECTION void clt_run_test(const clt_test_info_t *info) {
   const char *status = NULL;
   switch (clt_test_runner_data.last_test_status) {
   case FAIL:
-    status = ANSI_RED_FG "FAIL" ANSI_CLEAR_COLOR;
+    status = ANSI_RED_FG "FAILED" ANSI_CLEAR_COLOR;
     clt_test_runner_data.failures++;
     break;
   case IGNORE:
-    status = ANSI_YELLOW_FG "IGNORE" ANSI_CLEAR_COLOR;
+    status = ANSI_YELLOW_FG "ignored" ANSI_CLEAR_COLOR;
     clt_test_runner_data.ignored++;
     break;
   case PASS:
-    status = ANSI_GREEN_FG "PASS" ANSI_CLEAR_COLOR;
+    status = ANSI_GREEN_FG "ok" ANSI_CLEAR_COLOR;
     clt_test_runner_data.passed++;
     break;
   }
 
   if (info->flags & CLT_SHOULD_FAIL &&
       clt_test_runner_data.last_test_status == FAIL) {
-    printf(ANSI_BOLD "%s:%s:" ANSI_CLEAR_COLOR
-                     " %s " ANSI_BOLD "(Expected Failure but Instead Passed)\n" ANSI_CLEAR_COLOR,
-           info->file, info->name, status);
-  } else {
-    printf(ANSI_BOLD "%s:%s:" ANSI_CLEAR_COLOR " %s\n", info->file, info->name,
-           status);
+    CLT_LOG_FAIL("Expected an assertion to fail");
   }
+
+  printf("test %s::%s ... %s\n", clt_test_runner_data.current_module->name,
+         info->name, status);
 }
 
 CLT_TEXT_SECTION bool clt_is_null_test(const clt_test_info_t *test) {
@@ -192,7 +192,12 @@ CLT_TEXT_SECTION void clt_internal_run_module(const clt_module_info_t *info) {
   if (info == NULL)
     return; // TODO proper handling and message
 
-  printf("\n====== %s ======\n", info->name);
+  // Don't need a NULL pointer check as its never null
+  if (clt_is_null_test(info->tests))
+    return;
+
+  clt_test_runner_data.current_module = info;
+
   for (const clt_test_info_t *test = info->tests;
        test != NULL && !clt_is_null_test(test); test++) {
     clt_run_test(test);
@@ -217,7 +222,10 @@ CLT_TEXT_SECTION void clt_push_error_msg(char *msg) {
     struct clt_test_error_s *prev = clt_test_errors_tail;
 
     clt_test_errors_tail = calloc(1, sizeof(*clt_test_errors_tail));
+    if (clt_test_errors_tail == NULL)
+      return;
     clt_test_errors_tail->test_info = clt_test_runner_data.current_test;
+    clt_test_errors_tail->module_info = clt_test_runner_data.current_module;
 
     if (prev != NULL)
       prev->next = clt_test_errors_tail;
@@ -228,6 +236,11 @@ CLT_TEXT_SECTION void clt_push_error_msg(char *msg) {
 
   clt_test_error_msg_t *tail = clt_test_errors_tail->messages,
                        *message = calloc(1, sizeof(*message));
+  if(message == NULL) {
+    free(clt_test_errors_tail);
+    clt_test_errors_tail = NULL;
+    return;
+  }
   message->msg = msg;
   while (tail != NULL && tail->next != NULL) {
     tail = tail->next;

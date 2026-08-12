@@ -9,10 +9,16 @@
 CLT_TEXT_SECTION int clt_fail();
 CLT_TEXT_SECTION void clt_push_error_msg(char *msg);
 
+#ifndef CLT_MAX_ERROR_MSG_SIZE
+#define CLT_MAX_ERROR_MSG_SIZE 256
+#endif
+
 #define CLT_PUSH_ERROR_MSG(message, ...)                                       \
   do {                                                                         \
-    char *buf = calloc(256, sizeof(char));                                     \
-    snprintf(buf, 256, message __VA_OPT__(, ) __VA_ARGS__);                    \
+    char *buf = calloc(CLT_MAX_ERROR_MSG_SIZE, sizeof(char));                                     \
+    if (buf == NULL)                                                           \
+      break;                                                                   \
+    snprintf(buf, CLT_MAX_ERROR_MSG_SIZE, message __VA_OPT__(, ) __VA_ARGS__);                    \
     clt_push_error_msg(buf);                                                   \
   } while (0)
 
