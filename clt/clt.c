@@ -6,72 +6,71 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum {
-  PASS,
+enum clt_result {
+  OK,
   FAIL,
   IGNORE,
-} clt_test_status_t;
+};
 
-/*
- * Linked List for clt test error messages
- */
-typedef struct clt_test_error_msg_s {
-  struct clt_test_error_msg_s *next;
-  char *msg;
-} clt_test_error_msg_t;
+#define DefListNode(name, T)                                                   \
+  struct name {                                                                \
+    struct name *next;                                                         \
+    T;                                                                         \
+  }
+
+DefListNode(clt_msg_node, char *msg);
+DefListNode(
+    clt_err_node, struct {
+      const struct clt_test_info *test_info;
+      const struct clt_module_info *module_info;
+      struct clt_msg_node *msg_head;
+      struct clt_msg_node *msg_tail;
+    });
 
 /*
  * Global state for test runner
  */
 static struct {
-  size_t num_of_tests;
-  size_t passed;
-  size_t failures;
-  size_t ignored;
+  size_t n_tests;
+  size_t n_pass;
+  size_t n_fail;
+  size_t n_ignore;
 
-  clt_test_status_t last_test_status;
-  const clt_test_info_t *current_test;
-  const clt_module_info_t *current_module;
-} clt_test_runner_data CLT_DATA_SECTION;
+  enum clt_result last_result;
 
-/*
- * Global Linked List for clt test errors
- */
-static struct clt_test_error_s {
-  struct clt_test_error_s *next;
-  const clt_test_info_t *test_info;
-  const clt_module_info_t *module_info;
+  const struct clt_test_info *current_test;
+  const struct clt_module_info *current_module;
 
-  clt_test_error_msg_t *messages;
-} *clt_test_runner_errors CLT_DATA_SECTION = NULL;
-static struct clt_test_error_s *clt_test_errors_tail CLT_DATA_SECTION = NULL;
+  struct clt_err_node *err_head;
+  struct clt_err_node *err_tail;
+} clt_g_data CLT_DATA_SECTION;
 
-CLT_TEXT_SECTION void clt_free_error_msg_list(clt_test_error_msg_t *list) {
-  clt_test_error_msg_t *next = NULL;
-  while (list != NULL) {
-    next = list->next;
+CLT_TEXT_SECTION void clt_free_msg_list(struct clt_msg_node *head) {
+  struct clt_msg_node *next = NULL;
+  while (head != NULL) {
+    next = head->next;
 
-    free(list->msg);
-    list->next = NULL;
-    list->msg = NULL;
+    free(head->msg);
+    head->next = NULL;
+    head->msg = NULL;
 
-    free(list);
+    free(head);
 
-    list = next;
+    head = next;
   }
 }
 
-CLT_TEXT_SECTION void clt_free_error_list(struct clt_test_error_s *list) {
-  struct clt_test_error_s *next = NULL;
-  while (list != NULL) {
-    next = list->next;
+CLT_TEXT_SECTION void clt_free_err_list(struct clt_err_node *head) {
+  struct clt_err_node *next = NULL;
+  while (head != NULL) {
+    next = head->next;
 
-    list->next = NULL;
-    list->test_info = NULL;
-    clt_free_error_msg_list(list->messages);
-    free(list);
+    head->next = NULL;
+    head->test_info = NULL;
+    clt_free_msg_list(head->msg_head);
+    free(head);
 
-    list = next;
+    head = next;
   }
 }
 
@@ -79,26 +78,20 @@ CLT_TEXT_SECTION void clt_free_error_list(struct clt_test_error_s *list) {
  * Initialize Global state to begin running tests
  */
 CLT_TEXT_SECTION void clt_begin() {
-  clt_test_runner_data.passed = 0;
-  clt_test_runner_data.failures = 0;
-  clt_test_runner_data.ignored = 0;
-  clt_test_runner_data.last_test_status = PASS;
-  clt_test_runner_data.current_test = NULL;
-  clt_test_runner_data.current_module = NULL;
+  clt_g_data.n_pass = 0;
+  clt_g_data.n_fail = 0;
+  clt_g_data.n_ignore = 0;
 
-  clt_free_error_list(clt_test_runner_errors);
-  clt_test_runner_errors = NULL;
-  clt_test_errors_tail = NULL;
+  clt_g_data.last_result = OK;
+  clt_g_data.current_test = NULL;
+  clt_g_data.current_module = NULL;
+
+  clt_free_err_list(clt_g_data.err_head);
+  clt_g_data.err_head = NULL;
+  clt_g_data.err_tail = NULL;
 }
 
-/*
- * Print Test results and run cleanup routines
- *
- * @return 0 if success, 1 if fail
- */
-CLT_TEXT_SECTION int clt_end() {
-  struct clt_test_error_s *head = clt_test_runner_errors;
-
+CLT_TEXT_SECTION void clt_print_err_list(struct clt_err_node *head) {
   while (head != NULL) {
     printf("\nfailures:\n\n");
     printf("---- %s::%s ----\n", head->module_info->name,
@@ -113,7 +106,7 @@ CLT_TEXT_SECTION int clt_end() {
                                                              : "true");
     putchar('\n');
 
-    clt_test_error_msg_t *msg = head->messages;
+    struct clt_msg_node *msg = head->msg_head;
     while (msg != NULL) {
       printf("%s\n", msg->msg);
       msg = msg->next;
@@ -121,74 +114,81 @@ CLT_TEXT_SECTION int clt_end() {
 
     head = head->next;
   }
+}
+
+/*
+ * Print Test results and run cleanup routines
+ *
+ * @return 0 if success, 1 if fail
+ */
+CLT_TEXT_SECTION int clt_end() {
+  clt_print_err_list(clt_g_data.err_head);
 
   printf("\n----------------\n"
          "%ld Tests "
          "%ld Failures "
          "%ld Ignored\n",
-         clt_test_runner_data.num_of_tests, clt_test_runner_data.failures,
-         clt_test_runner_data.ignored);
+         clt_g_data.n_tests, clt_g_data.n_fail, clt_g_data.n_ignore);
 
-  printf("%s\n\n", clt_test_runner_data.failures == 0 ? "PASS" : "FAIL");
+  printf("%s\n\n", clt_g_data.n_fail == 0 ? "OK" : "FAIL");
 
-  clt_free_error_list(clt_test_runner_errors);
-  clt_test_runner_errors = NULL;
-  clt_test_errors_tail = NULL;
+  clt_free_err_list(clt_g_data.err_head);
+  clt_g_data.err_head = NULL;
+  clt_g_data.err_tail = NULL;
 
-  return clt_test_runner_data.failures != 0;
+  return clt_g_data.n_fail != 0;
 }
 
 /*
  * Run Test from test_info structure
  */
-CLT_TEXT_SECTION void clt_run_test(const clt_test_info_t *info) {
-  clt_test_runner_data.num_of_tests++;
-  clt_test_runner_data.current_test = info;
+CLT_TEXT_SECTION void clt_run_test(const struct clt_test_info *info) {
+  clt_g_data.n_tests++;
+  clt_g_data.current_test = info;
 
   if (info->flags & CLT_SHOULD_IGNORE) {
-    clt_test_runner_data.last_test_status = IGNORE;
+    clt_g_data.last_result = IGNORE;
   } else {
-    clt_test_runner_data.last_test_status =
-        (info->flags & CLT_SHOULD_FAIL) ? FAIL : PASS;
+    clt_g_data.last_result = (info->flags & CLT_SHOULD_FAIL) ? FAIL : OK;
     info->cb();
   }
 
   const char *status = NULL;
-  switch (clt_test_runner_data.last_test_status) {
+  switch (clt_g_data.last_result) {
   case FAIL:
     status = ANSI_RED_FG "FAILED" ANSI_CLEAR_COLOR;
-    clt_test_runner_data.failures++;
+    clt_g_data.n_fail++;
     break;
   case IGNORE:
     status = ANSI_YELLOW_FG "ignored" ANSI_CLEAR_COLOR;
-    clt_test_runner_data.ignored++;
+    clt_g_data.n_ignore++;
     break;
-  case PASS:
+  case OK:
     status = ANSI_GREEN_FG "ok" ANSI_CLEAR_COLOR;
-    clt_test_runner_data.passed++;
+    clt_g_data.n_pass++;
     break;
   }
 
-  if (info->flags & CLT_SHOULD_FAIL &&
-      clt_test_runner_data.last_test_status == FAIL) {
+  if (info->flags & CLT_SHOULD_FAIL && clt_g_data.last_result == FAIL) {
     CLT_LOG_FAIL("Expected an assertion to fail");
   }
 
-  printf("test %s::%s ... %s\n", clt_test_runner_data.current_module->name,
-         info->name, status);
+  printf("test %s::%s ... %s\n", clt_g_data.current_module->name, info->name,
+         status);
 }
 
-CLT_TEXT_SECTION bool clt_is_null_test(const clt_test_info_t *test) {
+CLT_TEXT_SECTION bool clt_is_null_test(const struct clt_test_info *test) {
   if (test == NULL)
     return true;
-  const clt_test_info_t null_test = CLT_NULL_TEST_INFO;
+  const struct clt_test_info null_test = CLT_NULL_TEST_INFO;
   return memcmp(&null_test, test, sizeof(null_test)) == 0;
 }
 
 /*
  * Run All tests within a given module
  */
-CLT_TEXT_SECTION void clt_internal_run_module(const clt_module_info_t *info) {
+CLT_TEXT_SECTION void
+clt_internal_run_module(const struct clt_module_info *info) {
   if (info == NULL)
     return; // TODO proper handling and message
 
@@ -196,9 +196,9 @@ CLT_TEXT_SECTION void clt_internal_run_module(const clt_module_info_t *info) {
   if (clt_is_null_test(info->tests))
     return;
 
-  clt_test_runner_data.current_module = info;
+  clt_g_data.current_module = info;
 
-  for (const clt_test_info_t *test = info->tests;
+  for (const struct clt_test_info *test = info->tests;
        test != NULL && !clt_is_null_test(test); test++) {
     clt_run_test(test);
   }
@@ -208,46 +208,64 @@ CLT_TEXT_SECTION void clt_internal_run_module(const clt_module_info_t *info) {
  * Set global failure state
  */
 CLT_TEXT_SECTION int clt_fail() {
-  if (clt_test_runner_data.current_test == NULL)
+  if (clt_g_data.current_test == NULL)
     return 1;
-  clt_test_runner_data.last_test_status =
-      clt_test_runner_data.current_test->flags & CLT_SHOULD_FAIL ? PASS : FAIL;
+  clt_g_data.last_result =
+      clt_g_data.current_test->flags & CLT_SHOULD_FAIL ? OK : FAIL;
 
-  return clt_test_runner_data.current_test->flags & CLT_SHOULD_FAIL ? 0 : 1;
+  return clt_g_data.current_test->flags & CLT_SHOULD_FAIL ? 0 : 1;
+}
+
+/*
+ * Validate that our error list node is the current modules
+ *
+ * Returns 0 on success, 1 on error
+ */
+CLT_TEXT_SECTION int clt_validate_err_list() {
+  if (clt_g_data.err_tail == NULL ||
+      clt_g_data.err_tail->test_info != clt_g_data.current_test ||
+      clt_g_data.err_tail->module_info != clt_g_data.current_module) {
+
+    struct clt_err_node *next = calloc(1, sizeof(*next));
+    if (next == NULL)
+      return 1;
+
+    next->test_info = clt_g_data.current_test;
+    next->module_info = clt_g_data.current_module;
+
+    if (clt_g_data.err_tail != NULL) {
+      clt_g_data.err_tail->next = next;
+    }
+    if (clt_g_data.err_head == NULL) {
+      clt_g_data.err_head = next;
+    }
+
+    clt_g_data.err_tail = next;
+  }
+
+  return 0;
 }
 
 CLT_TEXT_SECTION void clt_push_error_msg(char *msg) {
-  if (clt_test_errors_tail == NULL ||
-      clt_test_errors_tail->test_info != clt_test_runner_data.current_test) {
-    struct clt_test_error_s *prev = clt_test_errors_tail;
+  if (clt_validate_err_list())
+    return;
 
-    clt_test_errors_tail = calloc(1, sizeof(*clt_test_errors_tail));
-    if (clt_test_errors_tail == NULL)
-      return;
-    clt_test_errors_tail->test_info = clt_test_runner_data.current_test;
-    clt_test_errors_tail->module_info = clt_test_runner_data.current_module;
+  struct clt_msg_node **tail = &clt_g_data.err_tail->msg_tail,
+                      **head = &clt_g_data.err_tail->msg_head;
 
-    if (prev != NULL)
-      prev->next = clt_test_errors_tail;
-  }
-
-  if (clt_test_runner_errors == NULL)
-    clt_test_runner_errors = clt_test_errors_tail;
-
-  clt_test_error_msg_t *tail = clt_test_errors_tail->messages,
-                       *message = calloc(1, sizeof(*message));
-  if(message == NULL) {
-    free(clt_test_errors_tail);
-    clt_test_errors_tail = NULL;
+  struct clt_msg_node *next = calloc(1, sizeof(*next));
+  if (next == NULL) {
+    free(msg);
     return;
   }
-  message->msg = msg;
-  while (tail != NULL && tail->next != NULL) {
-    tail = tail->next;
-  }
 
-  if (tail != NULL)
-    tail->next = message;
-  else
-    clt_test_errors_tail->messages = message;
+  next->msg = msg;
+
+  if (*tail != NULL)
+    (*tail)->next = next;
+
+  *tail = next;
+
+  if (*head == NULL)
+    *head = *tail;
 }
