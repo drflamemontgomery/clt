@@ -168,7 +168,7 @@ CLT_TEXT_SECTION void clt_run_test(const struct clt_test_info *info) {
   }
 
   if (info->flags & CLT_SHOULD_FAIL && clt_g_data.last_result == FAIL) {
-    CLT_LOG_FAIL("Expected an assertion to fail");
+    CLT_LOG_FAIL("expected an assertion to fail");
   }
 
   printf("test %s::%s ... %s\n", clt_g_data.current_module->name, info->name,
