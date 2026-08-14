@@ -4,4 +4,5 @@
 compile_commands.json
 .git
 test_runner
+test_fail_runner
 clt-example

@@ -45,14 +45,13 @@ CLT_MODULE(foo,
 $ gcc main.c clt/clt.c file-with-foofoo-test.c -o test_runner
 $ ./test_runner
 
-====== foo ======
-test.c:foobar: PASS
-test.c:barfoo: PASS
-test.c:foofoo: IGNORE
+foo::foobar: ok
+foo::barfoo: ok
+foo::foofoo: ignored
 
 ----------------
 3 Tests 0 Failures 1 Ignored
-PASS
+OK
 
 ```
 ## Compatibility

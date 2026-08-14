@@ -5,6 +5,9 @@ TEST_OBJECTS = \
 	test/external.o \
 	test/runner.o \
 	$(END)
+TEST_FAIL_OBJECTS = \
+	test/fail.o \
+	$(END)
 EXAMPLE_OBJECTS = \
 	example/main.o \
 	example/algorithm.o \
@@ -30,14 +33,18 @@ clt-example: $(EXAMPLE_OBJECTS) clt/clt.o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-test_runner: CFLAGS += -DCLT_TEST_ENABLE=1
 test_runner: $(TEST_OBJECTS) clt/clt.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o test_runner
 
+test_fail_runner: CFLAGS+=-fsanitize=leak
+test_fail_runner: $(TEST_FAIL_OBJECTS) clt/clt.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o test_fail_runner
+
 .PHONY: test
 test: TEMPOBJFILE = $(shell mktemp).o
-test: test_runner clt-example
+test: test_runner test_fail_runner clt-example
 	@./test_runner
+	@./test_fail_runner
 	
 	@readelf -S clt-example | grep clt_text && \
 		{ echo "Error: .clt_text not stripped from clt-example"; exit 1; }; \
@@ -57,6 +64,7 @@ clean:
 	rm -f test_runner
 	rm -f clt/clt.o
 	rm -f $(TEST_OBJECTS)
+	rm -f $(TEST_FAIL_OBJECTS)
 	rm -f $(EXAMPLE_OBJECTS)
 
 define compile_command_object
