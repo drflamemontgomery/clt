@@ -12,20 +12,18 @@ enum clt_result {
   IGNORE,
 };
 
-#define DefListNode(name, T)                                                   \
-  struct name {                                                                \
-    struct name *next;                                                         \
-    T;                                                                         \
-  }
+struct clt_msg_node {
+  struct clt_msg_node *next;
+  char *msg;
+};
 
-DefListNode(clt_msg_node, char *msg);
-DefListNode(
-    clt_err_node, struct {
-      const struct clt_test_info *test_info;
-      const struct clt_module_info *module_info;
-      struct clt_msg_node *msg_head;
-      struct clt_msg_node *msg_tail;
-    });
+struct clt_err_node {
+  struct clt_err_node *next;
+  const struct clt_test_info *test_info;
+  const struct clt_module_info *module_info;
+  struct clt_msg_node *msg_head;
+  struct clt_msg_node *msg_tail;
+};
 
 /*
  * Global state for test runner
